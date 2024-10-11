@@ -1,24 +1,42 @@
-import logo from './logo.svg';
+import { useContext, useEffect } from 'react';
 import './App.css';
+import { Route, Routes, useLocation, useSearchParams } from 'react-router-dom';
+import AppContext from './context/appContext';
+import Home from './pages/home';
+import BlogPage from './pages/blogpage';
+import TagPage from './pages/tagpage';
+import CategoryPage from './pages/categorypage';
 
 function App() {
+  const {fetchBlogPosts} = useContext(AppContext)
+
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
+  
+  // calling api conditionally by checking url
+  useEffect( () => {
+    const page = searchParams.get("page") ?? 1;
+
+    if(location.pathname.includes("tags")) {
+      // it means tag page should be displayed
+      const tag = location.pathname.split("/").at(-1).replaceAll("-", " ");
+      fetchBlogPosts(Number(page), tag)
+    }
+    else if(location.pathname.includes("categories")) {
+      const category = location.pathname.split("/").at(-1).replace("-", " ");
+      fetchBlogPosts(Number(page), null, category)
+    }
+    else {
+      fetchBlogPosts(Number(page));
+    }
+  }, [location.pathname, location.search] )
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Routes>
+      <Route path='/' element={<Home />}/>
+      <Route path='/blog/:blogId' element={<BlogPage />} />
+      <Route path='/tags/:tag' element={<TagPage />}/>
+      <Route path='/categories/:category' element={<CategoryPage />}/>
+    </Routes>
   );
 }
 
